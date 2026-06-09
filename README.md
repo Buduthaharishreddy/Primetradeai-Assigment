@@ -73,7 +73,7 @@ Primetradeai-Assignment/
 - Python 3.10+
 - pip
 
-### Installation
+### Installation & Run
 
 ```bash
 # 1. Clone the repository
@@ -83,25 +83,18 @@ cd Primetradeai-Assigment
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Place your data files in the data/ folder
+# 3. Place your data files in data/
 #    data/fear_greed.csv
 #    data/historical_data.csv
-```
 
-### Run
-
-**Option A — Single script (fastest)**
-```bash
+# 4a. Run the full pipeline (one command)
 python run_analysis.py
-```
 
-**Option B — Jupyter Notebook (interactive, charts inline)**
-```bash
+# 4b. OR open the interactive notebook
 jupyter notebook notebooks/analysis.ipynb
 ```
-> Open in browser → run cells with **Shift + Enter**
 
-All 13 charts are saved to `outputs/figures/` and all 3 trained models to `outputs/models/`.
+> 💡 All 13 charts auto-save to `outputs/figures/` · All 3 trained models save to `outputs/models/`
 
 ---
 
@@ -109,10 +102,10 @@ All 13 charts are saved to `outputs/figures/` and all 3 trained models to `outpu
 
 | Dataset | Source | Rows | Date Range | Key Columns |
 |---|---|---|---|---|
-| Fear & Greed Index | Alternative.me | 2,644 days | 2018 – 2025 | `date`, `value`, `classification` |
-| Hyperliquid Trades | Primetrade.ai | 211,218 | May 2023 – May 2025 | `Account`, `Closed PnL`, `Size USD`, `Direction`, `Timestamp IST` |
+| Fear & Greed Index | Alternative.me | 2,644 days | 2018–2025 | `date`, `value`, `classification` |
+| Hyperliquid Trades | Primetrade.ai | 211,218 | May 2023–May 2025 | `Account`, `Closed PnL`, `Size USD`, `Direction`, `Timestamp IST` |
 
-**After merging on date key:** `211,218 trades × 28 engineered features`
+**After merging:** `211,218 trades × 28 engineered features`
 
 ### Sentiment Distribution in Trade Data
 
@@ -128,14 +121,11 @@ All 13 charts are saved to `outputs/figures/` and all 3 trained models to `outpu
 
 ## 🔧 Feature Engineering
 
-The preprocessing pipeline derives the following features from raw data:
-
 | Feature | Description | Type |
 |---|---|---|
 | `win` | 1 if Closed PnL > 0, else 0 | Binary |
-| `loss` | 1 if Closed PnL < 0, else 0 | Binary |
 | `abs_pnl` | Absolute value of Closed PnL | Float |
-| `position_value` | Trade notional = Size USD | Float |
+| `position_value` | Trade notional size in USD | Float |
 | `log_position_value` | log1p(position_value) — reduces skew | Float |
 | `sentiment_encoded` | Ordinal: Extreme Fear=0 … Extreme Greed=4 | Integer |
 | `sentiment_binary` | Fear-family=0, Greed-family=1 | Binary |
@@ -155,180 +145,162 @@ The preprocessing pipeline derives the following features from raw data:
 | 🟠 Neutral | $34.31 | 39.7% | 37,686 |
 | 🔴 Extreme Fear | $34.54 | 37.1% | 21,400 |
 
-> **📌 Key Insight:** Extreme Greed periods deliver the highest per-trade profitability AND win rate. Fear periods show relatively high average PnL — suggesting skilled traders exploit panic-driven market dislocations.
+> **📌 Key Insight:** Extreme Greed delivers the highest per-trade profitability AND win rate. Fear periods show surprisingly high avg PnL — suggesting skilled traders profit by exploiting panic-driven market dislocations.
 
 ### 📐 Statistical Test Results
 
 | Test | Statistic | p-value | Conclusion |
 |---|---|---|---|
-| Welch's T-Test (Fear vs Greed) | t = 1.851 | 0.064 | Not significant at α=0.05 alone |
-| **One-Way ANOVA** (all 5 groups) | F = 9.06 | **< 0.0001** | ✅ Significant differences across all sentiments |
-| **Chi-Square** (Sentiment × Win/Loss) | χ² = 821.99 | **< 0.0001** | ✅ Sentiment significantly affects win/loss outcome |
+| Welch's T-Test (Fear vs Greed) | t = 1.851 | 0.064 | Not significant at α=0.05 |
+| **One-Way ANOVA** (all 5 groups) | F = 9.062 | **< 0.0001** | ✅ Significant PnL differences |
+| **Chi-Square** (Sentiment × Win/Loss) | χ² = 821.99 | **< 0.0001** | ✅ Sentiment affects win rate |
 | Pearson Correlation (Sentiment ↔ PnL) | r = 0.006 | — | Weak linear relationship |
 
 ### 👥 Trader Segmentation
 
-| Segment | # Traders | Avg Total PnL | Avg Win Rate | Avg Position Size | Avg Trades |
+| Segment | Traders | Avg Total PnL | Win Rate | Avg Position | Avg Trades |
 |---|---|---|---|---|---|
 | 🥇 High Performer | 11 | **$812,049** | **43%** | $9,085 | 10,750 |
 | 🥈 Medium Performer | 10 | $130,680 | 39% | $2,787 | 4,871 |
 | 🥉 Low Performer | 11 | $1,378 | 38% | $5,855 | 4,024 |
 
-> **High performers** trade more frequently AND use larger position sizes, suggesting conviction-driven sizing, not random gambling.
-
 ---
 
 ## 🖼️ Visual Outputs
 
-All 13 charts use a consistent **dark theme** optimized for professional presentations.
+> All charts use a consistent **dark theme** optimized for professional presentations and reports. Generated via `matplotlib` + `seaborn`.
 
 ---
 
-### Chart 1 — Sentiment Distribution
-**`outputs/figures/01_sentiment_distribution.png`**
-
-> Shows how many trades (out of 211K) fall within each sentiment bucket. Fear dominates with 61,837 trades (29.3%), revealing that the dataset captures significant market stress periods. This provides context for all downstream sentiment-stratified analyses.
-
----
-
-### Chart 2 — Daily Profit Trend
-**`outputs/figures/02_daily_profit_trend.png`**
-
-> Time-series of total daily Closed PnL from May 2023 to May 2025, with sentiment-coloured background shading. Highlights volatility spikes, profitable streaks, and the correlation between sentiment regime shifts and aggregate trader returns over the 2-year window.
+### 1 · Sentiment Distribution
+![Sentiment Distribution](outputs/figures/01_sentiment_distribution.png)
+> Trade count per sentiment bucket. Fear dominates (29.3% of all trades), confirming the dataset captures significant market stress. This sets the baseline for all sentiment-stratified analyses.
 
 ---
 
-### Chart 3 — PnL Distribution by Sentiment (Violin)
-**`outputs/figures/03_pnl_violin_by_sentiment.png`**
-
-> Violin plots reveal the *shape* of the PnL distribution for each sentiment, not just the average. Wider violins indicate more variance. The quartile lines inside each violin show median and IQR. Clipped to 1st–99th percentile to remove extreme outliers and preserve visual clarity.
-
----
-
-### Chart 4 — Average PnL per Trade by Sentiment
-**`outputs/figures/04_avg_pnl_by_sentiment.png`**
-
-> Bar chart showing mean Closed PnL per trade by sentiment category. **Extreme Greed ($67.89)** clearly leads, followed by Fear ($54.29). Green bars = positive PnL, red = negative. The clear ordering across sentiments motivates the ANOVA and statistical tests.
+### 2 · Daily Profit Trend
+![Daily Profit Trend](outputs/figures/02_daily_profit_trend.png)
+> Time-series of daily aggregate Closed PnL (May 2023–May 2025) with sentiment-coloured background shading. Highlights how PnL volatility and sentiment regime changes align over the 2-year window.
 
 ---
 
-### Chart 5 — Win Rate by Sentiment
-**`outputs/figures/05_win_rate_by_sentiment.png`**
-
-> Win rate (% of trades with positive PnL) per sentiment. A 50% dashed reference line is included. **Extreme Greed achieves the highest win rate (46.5%)** while Extreme Fear has the lowest (37.1%). The consistent below-50% win rates tell us these traders rely on large wins to overcome loss frequency.
-
----
-
-### Chart 6 — Position Size (USD) by Sentiment
-**`outputs/figures/06_position_size_by_sentiment.png`**
-
-> Box plots of trade notional size (USD) across sentiments. Reveals whether traders increase or decrease position size during fear vs. greed. Larger position sizes during Fear suggests **panic-driven over-sizing** or contrarian conviction bets.
+### 3 · PnL Distribution by Sentiment (Violin)
+![PnL Violin](outputs/figures/03_pnl_violin_by_sentiment.png)
+> Violin plots reveal the *shape* of PnL distributions, not just averages. Wider violins = more variance. Clipped to 1st–99th percentile for visual clarity. Quartile lines show median and IQR per sentiment.
 
 ---
 
-### Chart 7 — Trade Direction Mix by Sentiment
-**`outputs/figures/07_direction_by_sentiment.png`**
-
-> 100% stacked bar showing the proportion of Buy vs. Sell trades per sentiment. A relatively balanced mix across all categories suggests these are sophisticated traders, not momentum chasers exclusively going long during greed and short during fear.
-
----
-
-### Chart 8 — Long vs. Short PnL by Sentiment
-**`outputs/figures/08_long_vs_short_pnl.png`**
-
-> Side-by-side comparison of average PnL for Long vs. Short trades within each sentiment. Reveals which direction is more profitable under each emotional regime — critical for strategy design (e.g., "go long during Extreme Greed" vs. "go short during Extreme Fear").
+### 4 · Average PnL per Trade by Sentiment
+![Avg PnL](outputs/figures/04_avg_pnl_by_sentiment.png)
+> Mean Closed PnL per trade across sentiment categories. **Extreme Greed ($67.89)** clearly leads. Green = positive, red = negative. The ordering motivates the ANOVA test showing statistically significant differences.
 
 ---
 
-### Chart 9 — Feature Correlation Heatmap
-**`outputs/figures/09_correlation_heatmap.png`**
-
-> Pearson correlation matrix across the key numeric features: PnL, position size, sentiment encoding, win flag, and fee. Lower-triangle only (removes redundancy). Notable finding: `position_value` and `closedPnL` have the strongest correlation (r=0.12), confirming that larger bets produce larger absolute outcomes.
-
----
-
-### Chart 10 — Cumulative PnL Over Time
-**`outputs/figures/10_cumulative_pnl.png`**
-
-> Running total of all trade PnL from day 1 to day last. Green fill = cumulative profit, red fill = drawdown periods. Gives an at-a-glance view of the overall profitability trajectory and the depth/duration of losing streaks, which is key for risk assessment.
+### 5 · Win Rate by Sentiment
+![Win Rate](outputs/figures/05_win_rate_by_sentiment.png)
+> Win rate (% of profitable trades) per sentiment with a 50% reference line. **Extreme Greed achieves 46.5%**, while Extreme Fear trails at 37.1%. Sub-50% win rates across all categories reveal these traders profit through asymmetric reward sizing.
 
 ---
 
-### Chart 11 — Random Forest Feature Importances
-**`outputs/figures/11_feature_importance.png`**
-
-> Horizontal bar chart of feature importance scores from the Random Forest model. Reveals which features the model finds most predictive of win/loss. `position_value` and `log_position_value` typically dominate, confirming that trade sizing is the strongest signal — larger trades tend to be better-researched.
-
----
-
-### Chart 12 — ROC Curves (All 3 Models)
-**`outputs/figures/12_roc_curves.png`**
-
-> Receiver Operating Characteristic curves for Logistic Regression, Random Forest, and XGBoost plotted on the same axes. Area Under the Curve (AUC) is annotated per model. **XGBoost achieves the best AUC (0.68)**, significantly above the random baseline of 0.50. Demonstrates that sentiment and sizing features have genuine predictive power.
+### 6 · Position Size (USD) by Sentiment
+![Position Size](outputs/figures/06_position_size_by_sentiment.png)
+> Box plots of trade notional size (USD). Reveals how aggressively traders size positions during each emotional regime. Larger sizes during Fear suggest contrarian conviction bets or panic-driven over-sizing.
 
 ---
 
-### Chart 13 — Confusion Matrix (Best Model)
-**`outputs/figures/13_confusion_matrix.png`**
+### 7 · Trade Direction Mix by Sentiment
+![Direction Mix](outputs/figures/07_direction_by_sentiment.png)
+> 100% stacked bar — Buy vs Sell proportions per sentiment. A balanced mix across categories indicates these are sophisticated traders rather than pure momentum chasers exclusively going long during greed.
 
-> Confusion matrix for XGBoost (best model) on the held-out test set (42,244 trades). Shows true positives, false positives, true negatives, false negatives. Useful for evaluating class-specific performance, especially given the 59%/41% class imbalance between losses and wins.
+---
+
+### 8 · Long vs Short PnL by Sentiment
+![Long vs Short](outputs/figures/08_long_vs_short_pnl.png)
+> Side-by-side avg PnL for Long vs Short trades per sentiment. Reveals which direction is more profitable under each emotional regime — critical for designing sentiment-aware directional strategies.
+
+---
+
+### 9 · Feature Correlation Heatmap
+![Correlation](outputs/figures/09_correlation_heatmap.png)
+> Pearson correlation matrix across key numeric features. `position_value` and `closedPnL` show the strongest correlation (r=0.12), confirming larger trades produce larger absolute outcomes. Sentiment has weak but non-zero correlation with win rate.
+
+---
+
+### 10 · Cumulative PnL Over Time
+![Cumulative PnL](outputs/figures/10_cumulative_pnl.png)
+> Running total of all trade PnL. Green fill = profit periods, red fill = drawdowns. Shows the overall trajectory and depth/duration of losing streaks — essential context for risk-adjusted strategy evaluation.
+
+---
+
+### 11 · Random Forest Feature Importances
+![Feature Importance](outputs/figures/11_feature_importance.png)
+> Importance scores from the Random Forest model. `position_value` and `log_position_value` dominate, confirming trade sizing is the strongest predictive signal. Larger trades tend to reflect higher research conviction.
+
+---
+
+### 12 · ROC Curves — All 3 Models
+![ROC Curves](outputs/figures/12_roc_curves.png)
+> ROC curves for Logistic Regression, Random Forest, and XGBoost on 42K held-out test trades. **XGBoost achieves AUC=0.68** vs. the 0.50 random baseline — meaningful signal given the inherent noise in short-term trade outcomes.
+
+---
+
+### 13 · Confusion Matrix — Best Model (XGBoost)
+![Confusion Matrix](outputs/figures/13_confusion_matrix.png)
+> Confusion matrix for XGBoost on the test set (42,244 trades). Evaluates class-specific performance against the 59%/41% Loss/Win imbalance. `class_weight='balanced'` was used to prevent the model from naively predicting "loss" for everything.
 
 ---
 
 ## 🤖 Machine Learning
 
-### Models & Performance
+### Model Performance
 
 | Model | ROC-AUC | 5-Fold CV Accuracy | Notes |
 |---|---|---|---|
-| Logistic Regression | 0.6025 | 51.7% | Linear baseline, fast |
+| Logistic Regression | 0.6025 | 51.7% | Linear baseline |
 | Random Forest | 0.6751 | 57.5% | Best interpretability |
-| **XGBoost** | **0.6808** | **63.4%** | **Best overall performance** |
+| **XGBoost** | **0.6808** | **63.4%** | ✅ Best overall |
 
-### Features Used for Prediction
+### Features Used
 
 ```python
 features = [
-    "position_value",       # Trade size in USD
-    "sentiment_encoded",    # Ordinal sentiment (0–4)
+    "position_value",       # Trade size (USD)
+    "sentiment_encoded",    # Ordinal sentiment 0–4
     "direction_encoded",    # Buy=1 / Sell=0
     "fee",                  # Trading fee paid
     "log_position_value",   # Log-transformed size (handles skew)
 ]
-target = "win"              # 1 = profitable trade, 0 = loss
+target = "win"              # 1 = profit, 0 = loss
 ```
 
-### Why ROC-AUC of 0.68 is meaningful
-Trade outcome prediction is inherently noisy — markets are semi-efficient and short-term outcomes have high randomness. An AUC of 0.68 (vs. random baseline of 0.50) on 42,000+ real trades is a **strong result** for this domain, indicating sentiment and sizing do carry real predictive signal.
+> **Why AUC=0.68 is strong:** Trade outcome prediction is inherently noisy. An AUC of 0.68 on 42,000+ real trades significantly exceeds the random baseline of 0.50, confirming sentiment and trade sizing carry genuine predictive signal.
 
 ---
 
 ## 💡 Strategic Insights
 
-Based on the full analysis, here are data-driven trading strategy recommendations:
-
-1. **Trade more aggressively during Extreme Greed** — highest win rate (46.5%) and avg PnL ($67.89) align to maximize expected value
-2. **Don't avoid Fear** — Fear periods show surprisingly high avg PnL ($54.29), suggesting expert traders profit from exploiting panic
-3. **Manage position sizing in Extreme Fear** — variance is highest, risk of large losses elevated
-4. **Win rate < 50% across all sentiment regimes** — winning strategies here rely on asymmetric reward (large wins outweigh frequent small losses)
-5. **Larger trades ≠ reckless** — High Performers use bigger position sizes AND more trades, showing conviction-based sizing
+1. **Trade more aggressively during Extreme Greed** — highest win rate (46.5%) and avg PnL ($67.89)
+2. **Don't avoid Fear** — $54.29 avg PnL suggests expert traders profit from exploiting panic
+3. **Manage sizing in Extreme Fear** — variance is highest; risk of large losses is elevated
+4. **Win rate < 50% everywhere** — winning strategies rely on asymmetric reward (large wins offset frequent small losses)
+5. **High Performers use bigger positions AND more trades** — conviction-based sizing, not luck
 
 ---
 
 ## 🔮 Future Enhancements
 
-| Enhancement | Description | Impact |
+| Enhancement | Description | Priority |
 |---|---|---|
-| 🕐 **Intraday sentiment** | Use hourly Fear & Greed instead of daily for finer-grained signal | High |
-| 📊 **Sharpe / Sortino Ratio** | Risk-adjusted performance metrics per sentiment | High |
-| 🔁 **Backtesting Engine** | Simulate a sentiment-aware trading strategy on historical data | Very High |
-| 🌐 **On-chain features** | Add BTC funding rates, open interest, liquidation volumes | High |
-| 🧠 **LSTM / Transformer** | Time-series deep learning models for sequential trade pattern detection | Medium |
-| 📰 **NLP Sentiment** | Incorporate Twitter/Reddit sentiment to complement Fear & Greed | Medium |
-| 🏦 **Cross-exchange** | Extend analysis to Binance, Bybit, dYdX for generalizability | Medium |
-| 📱 **Dashboard** | Interactive Streamlit or Dash app with live Fear & Greed API | Medium |
-| ⚡ **Real-time alerts** | Signal system that triggers trade recommendations on sentiment shifts | High |
-| 🔍 **Coin-level analysis** | Break down BTC vs. ETH vs. altcoin performance by sentiment | Low |
+| 🕐 Intraday Sentiment | Hourly Fear & Greed for finer-grained signals | 🔴 High |
+| 📊 Risk Metrics | Sharpe / Sortino ratio per sentiment regime | 🔴 High |
+| 🔁 Backtesting Engine | Simulate sentiment-aware strategy on historical data | 🔴 High |
+| 🌐 On-chain Features | BTC funding rates, open interest, liquidation volumes | 🔴 High |
+| ⚡ Real-time Alerts | Signal system triggered on sentiment shifts | 🔴 High |
+| 🧠 LSTM / Transformer | Sequential deep learning for trade pattern detection | 🟡 Medium |
+| 📰 NLP Sentiment | Twitter/Reddit sentiment to complement Fear & Greed | 🟡 Medium |
+| 📱 Streamlit Dashboard | Interactive live dashboard with Fear & Greed API | 🟡 Medium |
+| 🏦 Cross-exchange | Extend to Binance, Bybit, dYdX | 🟡 Medium |
+| 🔍 Coin-level Analysis | BTC vs ETH vs altcoin breakdown by sentiment | 🟢 Low |
 
 ---
 
@@ -338,7 +310,7 @@ Based on the full analysis, here are data-driven trading strategy recommendation
 |---|---|
 | Data Processing | `pandas` · `numpy` |
 | Visualization | `matplotlib` · `seaborn` |
-| Statistics | `scipy` (T-Test, ANOVA, Chi-Square) |
+| Statistical Testing | `scipy` (T-Test, ANOVA, Chi-Square, Pearson) |
 | Machine Learning | `scikit-learn` · `xgboost` |
 | Notebook | `jupyter` |
 | Model Persistence | `pickle` |
@@ -347,13 +319,11 @@ Based on the full analysis, here are data-driven trading strategy recommendation
 
 ## 📝 Resume-Worthy Talking Points
 
-When presenting this project in interviews:
-
 1. **"Merged two independent real-world datasets"** — aligned a time-series sentiment index with 211K trade executions via date-key merging
-2. **"Validated hypotheses statistically"** — applied ANOVA (p<0.0001) and Chi-Square (χ²=821.99) rather than relying on visuals alone
-3. **"Handled class imbalance"** — used `class_weight='balanced'` and stratified splits for the 59/41 loss/win split
-4. **"Built modular, production-style code"** — separated preprocessing, EDA, and modeling into independent importable modules
-5. **"Discovered a counterintuitive finding"** — Fear periods show higher avg PnL than Greed, challenging the naive assumption that greed = better performance
+2. **"Validated hypotheses statistically"** — ANOVA (p<0.0001) and Chi-Square (χ²=821.99), not just visuals
+3. **"Handled class imbalance"** — `class_weight='balanced'` and stratified splits for 59/41 Loss/Win split
+4. **"Built modular, production-style code"** — separated preprocessing, EDA, and modeling into importable modules
+5. **"Discovered a counterintuitive finding"** — Fear periods ($54.29) outperform Greed ($42.74), challenging naive assumptions
 6. **"Achieved 0.68 ROC-AUC on 42K test trades"** — meaningful predictive signal in a genuinely noisy domain
 
 ---
@@ -370,6 +340,6 @@ This project is licensed under the MIT License.
 
 *By Budutha Harish Reddy*
 
-⭐ Star this repo if you found it useful!
+⭐ **Star this repo if you found it useful!**
 
 </div>
